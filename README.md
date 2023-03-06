@@ -12,5 +12,6 @@ Special thanks:
 [https://tobiasvl.github.io/blog/write-a-chip-8-emulator/](https://tobiasvl.github.io/blog/write-a-chip-8-emulator/)
 [https://github.com/imrenagi/chip8/](https://github.com/imrenagi/chip8/)
 [https://github.com/skatiyar/go-chip8](https://github.com/skatiyar/go-chip8)
+[https://github.com/kripod/chip8-roms](https://github.com/kripod/chip8-roms)
 
 

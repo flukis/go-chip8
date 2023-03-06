@@ -9,7 +9,7 @@ import (
 func main() {
 	display := NewDisplay()
 	emu := NewEmulator(&display)
-	if err := emu.LoadROM("roms/demos/Maze [David Winter, 199x].ch8"); err != nil {
+	if err := emu.LoadROM("roms/simple/Maze [David Winter, 199x].ch8"); err != nil {
 		panic(err)
 	}
 
