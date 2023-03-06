@@ -9,7 +9,7 @@ import (
 func main() {
 	display := NewDisplay()
 	emu := NewEmulator(&display)
-	if err := emu.LoadROM("roms/pong.c8"); err != nil {
+	if err := emu.LoadROM("roms/invaders.c8"); err != nil {
 		panic(err)
 	}
 

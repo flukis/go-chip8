@@ -98,8 +98,6 @@ func (e *Emulator) Loop() {
 	vx := e.VX[(e.OC&0x0F00)>>8]
 	vy := e.VX[(e.OC&0x00F0)>>4]
 
-	fmt.Printf("op code : %x\n", e.OC)
-
 	switch e.OC & 0xF000 {
 	case 0x0000:
 		e.ClearScreen()
