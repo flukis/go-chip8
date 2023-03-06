@@ -9,7 +9,7 @@ import (
 func main() {
 	display := NewDisplay()
 	emu := NewEmulator(&display)
-	if err := emu.LoadROM("roms/simple/Maze [David Winter, 199x].ch8"); err != nil {
+	if err := emu.LoadROM("roms/pong.c8"); err != nil {
 		panic(err)
 	}
 
@@ -93,7 +93,7 @@ func main() {
 				}
 			}
 		}
-		sdl.Delay(1000 / 60)
+		sdl.Delay(500 / 60)
 	}
 
 }

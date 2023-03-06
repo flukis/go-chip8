@@ -76,7 +76,7 @@ func (e *Emulator) LoadROM(pathfile string) error {
 		return err
 	}
 
-	if int64(len(e.Memory)-512) < fStat.Size() {
+	if int64(len(e.Memory)-0x200) < fStat.Size() {
 		return fmt.Errorf("ROM size bigger than memory")
 	}
 
@@ -86,7 +86,7 @@ func (e *Emulator) LoadROM(pathfile string) error {
 	}
 
 	for i := 0; i < len(buffer); i++ {
-		e.Memory[512+uint16(i)] = buffer[i]
+		e.Memory[0x200+uint16(i)] = buffer[i]
 	}
 
 	return nil
@@ -97,6 +97,8 @@ func (e *Emulator) Loop() {
 
 	vx := e.VX[(e.OC&0x0F00)>>8]
 	vy := e.VX[(e.OC&0x00F0)>>4]
+
+	fmt.Printf("op code : %x\n", e.OC)
 
 	switch e.OC & 0xF000 {
 	case 0x0000:
@@ -110,7 +112,7 @@ func (e *Emulator) Loop() {
 	case 0x4000:
 		e.SkipIfNotVXEqualNN(vx)
 	case 0x5000:
-		e.SkipIfVXEqualVY(vx)
+		e.SkipIfVXEqualVY(vx, vy)
 	case 0x6000:
 		e.SetRegisterVX()
 	case 0x7000:
@@ -118,7 +120,7 @@ func (e *Emulator) Loop() {
 	case 0x8000:
 		e.LogicalAndArithmatic(vx, vy)
 	case 0x9000:
-		e.SkipIfVXNotEqualVY(vx)
+		e.SkipIfVXNotEqualVY(vx, vy)
 	case 0xA000:
 		e.SetIndexReg()
 	case 0xB000:
@@ -127,12 +129,12 @@ func (e *Emulator) Loop() {
 		e.SetVX()
 	case 0xD000:
 		e.Draw(vx, vy)
-	case 0x000E:
+	case 0xE000:
 		e.SkipByKey(vx)
-	case 0x000F:
-		e.OtherInstructions(vx, vy)
+	case 0xF000:
+		e.Instructions(vx, vy)
 	default:
-		log.Printf("Invalid opcode %X\n", e.OC)
+		log.Panicf("Invalid opcode %X\n", e.OC)
 	}
 
 	if e.delayTimer > 0 {
@@ -150,17 +152,17 @@ func (e *Emulator) skipnext() {
 
 func (e *Emulator) ClearScreen() {
 	switch e.OC & 0x000F {
-	case 0x0:
+	case 0x0000:
 		// 00E0 - clear screen
 		e.Display.Clear()
 		e.Display.Draw()
 		e.next()
 	case 0x000E:
-		e.SP = e.SP - 1
 		e.PC = e.Stack[e.SP]
+		e.SP -= 1
 		e.next()
 	default:
-		log.Printf("Invalid opcode %X\n", e.OC)
+		log.Panicf("Invalid opcode %X\n", e.OC)
 	}
 }
 
@@ -194,9 +196,9 @@ func (e *Emulator) SkipIfNotVXEqualNN(vx uint8) {
 	}
 }
 
-func (e *Emulator) SkipIfVXEqualVY(vx uint8) {
+func (e *Emulator) SkipIfVXEqualVY(vx, vy uint8) {
 	// 5NNN - skip if VX == VY
-	if vx == e.VX[(e.OC&0x0F00)>>4] {
+	if vx == vy {
 		e.skipnext() // skip
 	} else {
 		e.next()
@@ -273,13 +275,13 @@ func (e *Emulator) LogicalAndArithmatic(vx, vy uint8) {
 		e.VX[vxAddr] = vx << 1
 		e.next()
 	default:
-		log.Printf("Invalid opcode %X\n", e.OC)
+		log.Panicf("Invalid opcode %X\n", e.OC)
 	}
 }
 
-func (e *Emulator) SkipIfVXNotEqualVY(vx uint8) {
+func (e *Emulator) SkipIfVXNotEqualVY(vx, vy uint8) {
 	// 9NNN - skip if VX != VY
-	if vx != e.VX[(e.OC&0x0F00)>>4] {
+	if vx != vy {
 		e.skipnext() // skip
 	} else {
 		e.next()
@@ -318,15 +320,15 @@ func (e *Emulator) Draw(vx, vy uint8) {
 			screenX := x + uint8(7-j)
 			screenY := y + uint8(i)
 
-			spritePixel := (nthByte >> j) & 0x01
+			spritePixel := ((nthByte >> j) & 0x01) == 1
 			screenPixel := e.Display.GetPixel(screenX, screenY)
 
 			if screenX > maxX || screenY > maxY {
 				continue
 			}
 
-			val := spritePixel ^ screenPixel
-			if spritePixel == 1 && screenPixel == 1 {
+			val := spritePixel || screenPixel
+			if spritePixel && screenPixel {
 				e.VX[0xF] = 1
 			}
 			e.Display.SetPixel(screenX, screenY, val)
@@ -354,11 +356,11 @@ func (e *Emulator) SkipByKey(vx uint8) {
 			e.next()
 		}
 	default:
-		log.Printf("Invalid opcode %X\n", e.OC)
+		log.Panicf("Invalid opcode %X\n", e.OC)
 	}
 }
 
-func (e *Emulator) OtherInstructions(vx, vy uint8) {
+func (e *Emulator) Instructions(vx, vy uint8) {
 	vxAddr := (e.OC & 0x0F00) >> 8
 	switch e.OC & 0x00FF {
 	case 0x0007:
@@ -407,20 +409,20 @@ func (e *Emulator) OtherInstructions(vx, vy uint8) {
 		e.next()
 	case 0x0055:
 		// 0xFX55 store v0 to vx
-		for i := 0; i < int(vx+1); i++ {
+		for i := 0; i < int(vxAddr)+1; i++ {
 			e.Memory[uint16(i)+e.IV] = e.VX[i]
 		}
 		e.IV = uint16(vx + 1)
 		e.next()
-	case 0x0056:
-		// 0xFX56 fill v0 to vx
-		for i := 0; i < int(vx+1); i++ {
+	case 0x0065:
+		// 0xFX65 fill v0 to vx
+		for i := 0; i < int(vxAddr)+1; i++ {
 			e.VX[i] = e.Memory[e.IV+uint16(i)]
 		}
 		e.IV = uint16(vx + 1)
 		e.next()
 	default:
-		log.Printf("Invalid opcode %X\n", e.OC)
+		log.Panicf("Invalid opcode %X\n", e.OC)
 	}
 
 }

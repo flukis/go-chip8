@@ -5,8 +5,13 @@ Progress:
 - [x] Keyboard functionality
 
 Unresolved OPCODE:
-- [ ] 0xF21E
-- [ ] 0xFD15
+- [ ] 0xF31E - chip8-test-suite.ch8
+
+Tested ROM:
+- [x] ibm-logo.ch8
+- [x] maze.ch8
+- [ ] chip8-test-suite.ch8
+- [ ] octoachip8story.ch8
 
 Special thanks:
 [https://tobiasvl.github.io/blog/write-a-chip-8-emulator/](https://tobiasvl.github.io/blog/write-a-chip-8-emulator/)

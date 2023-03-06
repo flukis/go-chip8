@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	RECT_SIZE int32 = 20
+	RECT_SIZE int32 = 10
 )
 
 type Drawer interface {
@@ -17,7 +17,7 @@ type Drawer interface {
 
 type Display struct {
 	drawer Drawer
-	data   [8192]uint8
+	data   [32]uint64
 	H, W   uint8
 }
 
@@ -36,25 +36,31 @@ func (s *Display) Clear() {
 
 func (s *Display) Draw() {
 	s.drawer.Clear()
-
-	for i, value := range s.data {
-		y := i / int(s.W)
-		x := i % int(s.W)
-		if value > 0 {
-			s.drawer.Set(int32(x), int32(y))
+	for j, value := range s.data {
+		for i := 0; i < 64; i++ {
+			val := value & (1 << i)
+			x := i
+			y := j
+			if val > 0 {
+				s.drawer.Set(int32(x), int32(y))
+			}
 		}
 	}
-
 	s.drawer.Draw()
 }
 
-func (s *Display) GetPixel(x, y uint8) uint8 {
-	i := uint16(s.W)*uint16(y) + uint16(x)
-	return s.data[i]
+func (s *Display) GetPixel(x, y uint8) bool {
+	val := s.data[y] & (1 << x)
+	return (val > 0)
 }
-func (s *Display) SetPixel(x, y, value uint8) {
-	i := uint16(s.W)*uint16(y) + uint16(x)
-	s.data[i] = value
+
+func (s *Display) SetPixel(x, y uint8, on bool) {
+	if on {
+		s.data[y] |= (1 << x)
+	} else {
+		mask := ^(1 << x)
+		s.data[y] &= uint64(mask)
+	}
 }
 
 type SDLDisplay struct {
