@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	RECT_SIZE int32 = 10
+	RECT_SIZE int32 = 20
 )
 
 type Drawer interface {

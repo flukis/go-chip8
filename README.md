@@ -2,9 +2,14 @@
 
 Progress:
 - [x] Able to show *IBM* using image fomr "samples/IBM Logo.ch8"
-- [ ] Keyboard functionality
+- [x] Keyboard functionality
 
-Thanks to inspiration code / maybe I copy and paste too much too 
+Unresolved OPCODE:
+- [ ] 0xF21E
+- [ ] 0xFD15
+
+Special thanks:
+[https://tobiasvl.github.io/blog/write-a-chip-8-emulator/](https://tobiasvl.github.io/blog/write-a-chip-8-emulator/)
 [https://github.com/imrenagi/chip8/](https://github.com/imrenagi/chip8/)
 [https://github.com/skatiyar/go-chip8](https://github.com/skatiyar/go-chip8)
 
